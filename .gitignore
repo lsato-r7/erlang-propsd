@@ -1,0 +1,12 @@
+.erlang.mk/
+cover/
+deps/
+ebin/
+logs/
+test/*.beam
+test/ct.cover.spec
+.propsd.plt
+ct.coverdata
+eunit.coverdata
+propsd.config
+propsd.d
