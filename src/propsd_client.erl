@@ -14,6 +14,7 @@ start_link() ->
 init([]) ->
   case application:get_env(propsd, url) of
     undefined -> ignore;
+    {ok, <<"">>} -> ignore;
     {ok, URL} ->
       case hackney:connect(URL) of
         {ok, ConnRef} ->
