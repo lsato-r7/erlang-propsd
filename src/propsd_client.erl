@@ -15,13 +15,7 @@ init([]) ->
   case application:get_env(propsd, url) of
     undefined -> ignore;
     {ok, <<"">>} -> ignore;
-    {ok, URL} ->
-      case hackney:connect(URL) of
-        {ok, ConnRef} ->
-          pull_props(ConnRef),
-          {ok, ConnRef, 10000};
-        _ -> {ok, retry, 1000}
-      end
+    {ok, URL} -> wait_connect(10, URL)
   end.
 
 -spec handle_call(term(), term(), map()) -> {reply, term(), map()}.
@@ -33,9 +27,7 @@ handle_cast(_Reqest,  State) ->
   {noreply, State}.
 
 -spec handle_info(term(), map()) -> {noreply, map()}.
-handle_info(timeout, retry) ->
-  {ok, URL} = application:get_env(propsd, url),
-  {ok, ConnRef} = hackney:connect(URL),
+handle_info(timeout, ConnRef) ->
   pull_props(ConnRef),
   {noreply, ConnRef, 10000};
 handle_info(_Info,  State) ->
@@ -80,6 +72,18 @@ try_to_atom(K) ->
   catch
     _Class:_Err ->
       K
+  end.
+
+wait_connect(0, _URL) -> {stop, "Could not connect to propsd server"};
+wait_connect(N, URL) ->
+  case hackney:connect(URL) of
+    {ok, ConnRef} ->
+      pull_props(ConnRef),
+      {ok, ConnRef, 10000};
+    _ ->
+      receive
+      after 1000 -> wait_connect(N - 1, URL)
+      end
   end.
 
 -ifdef(TEST).
