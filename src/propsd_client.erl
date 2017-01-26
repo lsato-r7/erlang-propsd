@@ -37,7 +37,7 @@ handle_info(timeout, retry) ->
   {ok, URL} = application:get_env(propsd, url),
   {ok, ConnRef} = hackney:connect(URL),
   pull_props(ConnRef),
-  {ok, ConnRef, 10000};
+  {noreply, ConnRef, 10000};
 handle_info(_Info,  State) ->
   {noreply, State}.
 
